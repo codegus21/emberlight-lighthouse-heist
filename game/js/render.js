@@ -33,6 +33,174 @@ const COLORS = {
   gold: '#ffd166',
 };
 
+// Pixel sprites: 16x16 maps drawn in code, rendered 2x for crisp 32x32
+// characters (exactly one tile). No downloaded assets, no network at runtime.
+// The thief is a ninja in black with a headband and red tie; the guards are
+// police in navy with cap, gold badge and black belt. Three directional
+// variants each (DOWN / UP / SIDE; SIDE flips horizontally for left).
+const NINJA_PALETTE = { K: '#14161d', k: '#2b3040', T: '#aebfd9', S: '#f2c89b', E: '#14161d', R: '#c0392b', H: '#3a4157' };
+const POLICE_PALETTE = { N: '#1e3a6e', n: '#152a52', B: '#101318', G: '#ffd166', S: '#f2c89b', W: '#e8ecf2', T: '#7fa0d0' };
+
+const NINJA_DOWN = [
+  '................',
+  '.....KKKKK......',
+  '....KKKKKKK.....',
+  '....KHHHHHKRR...',
+  '....KSESESKR....',
+  '....KKKKKKK.R...',
+  '.....KKKKK......',
+  '...TKKKKKKKKT...',
+  '...TKKKKKkkKT...',
+  '...TKkkKKKKKT...',
+  '....kkkTTkkk....',
+  '....KKKKKKKK....',
+  '....KKK..KKK....',
+  '....KKK..KKK....',
+  '...KKKK..KKKK...',
+  '...KKK....KKK...',
+];
+
+const NINJA_UP = [
+  '................',
+  '.....KKKKK......',
+  '....KKKKKKK.....',
+  '....HHHRRHH.....',
+  '....KKKRRKK.....',
+  '....KKKKKKK.....',
+  '.....KKKKK......',
+  '...TKKKKKKKKT...',
+  '...TKKKKKkkKT...',
+  '...TKkkKKKKKT...',
+  '....kkkTTkkk....',
+  '....KKKKKKKK....',
+  '....KKK..KKK....',
+  '....KKK..KKK....',
+  '...KKKK..KKKK...',
+  '...KKK....KKK...',
+];
+
+const NINJA_SIDE = [
+  '................',
+  '......KKKKK.....',
+  '.....KKKKKKK....',
+  '.....RRHHHHH....',
+  '.....KKKKSEKK...',
+  '....RKKKKKKK....',
+  '......KKKKK.....',
+  '....TKKKKKKKKT..',
+  '....TKKKKKKkkT..',
+  '....TKkkKKKKKT..',
+  '.....kkkTTkk....',
+  '.....KKKKKKK....',
+  '....KKK..KKK....',
+  '....KKK..KKK....',
+  '...KKK....KKK...',
+  '...KKK....KKK...',
+];
+
+const GUARD_DOWN = [
+  '.....NNNNNN.....',
+  '....NNNNNNNN....',
+  '....NNNGGNNN....',
+  '...BBBBBBBBBB...',
+  '.....SBSSBS.....',
+  '.....SSSSSS.....',
+  '.....SSWWSS.....',
+  '...GNNNNNNNNG...',
+  '...NNWWNNNNNN...',
+  '...NNNGNNNNNN...',
+  '....BBBGGBBB....',
+  '....NNNNNNNN....',
+  '....nnn..nnn....',
+  '....nnn..nnn....',
+  '...BBBB..BBBB...',
+  '...BBB....BBB...',
+];
+
+const GUARD_UP = [
+  '.....NNNNNN.....',
+  '....NNNNNNNN....',
+  '....NNNNNNNN....',
+  '....NNNNNNNN....',
+  '.....NNNNNN.....',
+  '.....NNNNNN.....',
+  '.....NNWWNN.....',
+  '...GNNNNNNNNG...',
+  '...NNNNNNNNNN...',
+  '...NNNGNNNNNN...',
+  '....BBBGGBBB....',
+  '....NNNNNNNN....',
+  '....nnn..nnn....',
+  '....nnn..nnn....',
+  '...BBBB..BBBB...',
+  '...BBB....BBB...',
+];
+
+const GUARD_SIDE = [
+  '......NNNNNN....',
+  '.....NNNNNNNN...',
+  '.....NNGGNNNN...',
+  '.....BBBBBBBBB..',
+  '.......SSBSS....',
+  '.......SSSSS....',
+  '.......SSWWS....',
+  '....GNNNNNNNG...',
+  '....NNWWNNNNN...',
+  '....NNNNGNNNN...',
+  '.....BBBGGBBB...',
+  '.....NNNNNNNN...',
+  '....nnn..nnn....',
+  '....nnn..nnn....',
+  '...BBBB...BBBB..',
+  '...BBB....BBB...',
+];
+
+function makeSprite(rows, palette) {
+  const c = document.createElement('canvas');
+  c.width = 16;
+  c.height = 16;
+  const g = c.getContext('2d');
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const ch = rows[y][x];
+      if (ch === '.' || ch === undefined) continue;
+      g.fillStyle = palette[ch];
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+  return c;
+}
+
+const SPRITES = {
+  ninja: {
+    DOWN: makeSprite(NINJA_DOWN, NINJA_PALETTE),
+    UP: makeSprite(NINJA_UP, NINJA_PALETTE),
+    SIDE: makeSprite(NINJA_SIDE, NINJA_PALETTE),
+  },
+  police: {
+    DOWN: makeSprite(GUARD_DOWN, POLICE_PALETTE),
+    UP: makeSprite(GUARD_UP, POLICE_PALETTE),
+    SIDE: makeSprite(GUARD_SIDE, POLICE_PALETTE),
+  },
+};
+
+// Direction selection on the dominant axis. Idle keeps the last movement
+// direction, so a standing character never snaps to a new pose.
+function spriteDir(dx, dy) {
+  if (dy > 0.5) return { variant: 'DOWN', flip: false };
+  if (dy < -0.5) return { variant: 'UP', flip: false };
+  return { variant: 'SIDE', flip: dx < 0 };
+}
+
+function drawSprite(ctx, sprite, x, y, flip) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(Math.round(x), Math.round(y));
+  if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(sprite, -16, -16, 32, 32);
+  ctx.restore();
+}
+
 function wedge(ctx, x, y, facing, halfAngle, range, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -43,6 +211,7 @@ function wedge(ctx, x, y, facing, halfAngle, range, color) {
 }
 
 export function drawWorld(ctx, game) {
+  ctx.imageSmoothingEnabled = false;
   const { level, player, guards, cameras, beam, time } = game;
   drawFloor(ctx, level);
   drawLampPools(ctx, level);
@@ -286,21 +455,10 @@ function drawCameras(ctx, cameras) {
 
 function drawGuards(ctx, guards, time) {
   for (const g of guards) {
-    // Body: a keeper's dark circle with a brass helmet ring.
-    ctx.fillStyle = '#3d2b1f';
-    ctx.beginPath();
-    ctx.arc(g.x, g.y, 12, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#c9a227';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // Facing tick.
-    ctx.strokeStyle = '#e8dcc0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(g.x, g.y);
-    ctx.lineTo(g.x + Math.cos(g.facing) * 15, g.y + Math.sin(g.facing) * 15);
-    ctx.stroke();
+    // Police officer: navy uniform, cap with a gold badge, black belt.
+    // Direction comes from the sprite variant, so the old facing tick is gone.
+    const d = spriteDir(Math.cos(g.facing), Math.sin(g.facing));
+    drawSprite(ctx, SPRITES.police[d.variant], g.x, g.y, d.flip);
     // Alert mark.
     if (g.state === 'suspicious' || g.state === 'searching') {
       ctx.fillStyle = '#ffd166';
@@ -322,8 +480,8 @@ function drawGuards(ctx, guards, time) {
 }
 
 function drawPlayer(ctx, player, game) {
-  // Visibility ring: green hidden, amber seen, red spotted. The ring and a
-  // bright cloak keep the thief readable against the dark floor at a glance.
+  // Visibility ring: green hidden, amber seen, red spotted. The ring and the
+  // ninja sprite keep the thief readable against the dark floor at a glance.
   const maxAlert = Math.max(game.suspicion, ...game.guards.map((g) => g.alert));
   const ring = maxAlert >= 100 ? '#ff5d5d' : maxAlert >= 30 ? '#ffb347' : player.hidden ? '#39d98a' : '#dbe7f5';
   ctx.strokeStyle = ring;
@@ -331,26 +489,10 @@ function drawPlayer(ctx, player, game) {
   ctx.beginPath();
   ctx.arc(player.x, player.y, 17, 0, Math.PI * 2);
   ctx.stroke();
-  // Hooded cloak: a bright teardrop pointing where the player faces.
-  ctx.save();
-  ctx.translate(player.x, player.y);
-  ctx.rotate(Math.atan2(player.dirY, player.dirX));
-  ctx.fillStyle = player.sneaking ? '#2c4a6e' : '#4a7ab5';
-  ctx.beginPath();
-  ctx.moveTo(15, 0);
-  ctx.lineTo(-10, -10);
-  ctx.lineTo(-6, 0);
-  ctx.lineTo(-10, 10);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#bcd6f5';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = '#f2ead8';
-  ctx.beginPath();
-  ctx.arc(3, 0, 6.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // Ninja thief: black outfit, headband with a red tie. Direction comes from
+  // the last movement direction, so the sprite never snaps while idle.
+  const d = spriteDir(player.dirX, player.dirY);
+  drawSprite(ctx, SPRITES.ninja[d.variant], player.x, player.y, d.flip);
 }
 
 function drawShell(ctx, player) {

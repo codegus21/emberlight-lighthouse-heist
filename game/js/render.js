@@ -34,10 +34,12 @@ const COLORS = {
 };
 
 // Pixel sprites: 16x16 maps drawn in code, rendered 2x for crisp 32x32
-// characters (exactly one tile). No downloaded assets, no network at runtime.
-// The thief is a ninja in black with a headband and red tie; the guards are
-// police in navy with cap, gold badge and black belt. Three directional
-// variants each (DOWN / UP / SIDE; SIDE flips horizontally for left).
+// characters (exactly one tile). No network at runtime. The thief is a ninja
+// in black with a headband and red tie; the guards are police in navy with
+// cap, gold badge and black belt. Three directional variants each (DOWN / UP /
+// SIDE; SIDE flips horizontally for left). The coin is Kenney's "Tiny Dungeon"
+// tile_0120 (gold coin pile), CC0 — source PNG kept at game/assets/
+// kenney-coin.png, transcribed pixel-for-pixel into COIN_MAP below.
 const NINJA_PALETTE = { K: '#14161d', k: '#2b3040', T: '#aebfd9', S: '#f2c89b', E: '#14161d', R: '#c0392b', H: '#3a4157' };
 const POLICE_PALETTE = { N: '#1e3a6e', n: '#152a52', B: '#101318', G: '#ffd166', S: '#f2c89b', W: '#e8ecf2', T: '#7fa0d0' };
 
@@ -155,6 +157,27 @@ const GUARD_SIDE = [
   '...BBB....BBB...',
 ];
 
+const COIN_PALETTE = { A: '#3f2631', B: '#eaa56c', C: '#bd6c4a', D: '#763b36', E: '#ffffff' };
+
+const COIN_MAP = [
+  '................',
+  '................',
+  '.....AAAAAA.....',
+  '..AAAAAAAAAAAA..',
+  '.AAAAABAABAAAAA.',
+  'AAACAACBBCAACAAA',
+  'AACCCDBBBBDCCCAA',
+  'AACCCDEBBEDCCCAA',
+  'AACCBCBBBBCBCCAA',
+  'AACCCABBBBACCCAA',
+  'AABABACCCCABABAA',
+  'AAAAAABAABAAAAAA',
+  '.AAAAAAAAAAAAAA.',
+  '.....AAAAAA.....',
+  '................',
+  '................',
+];
+
 function makeSprite(rows, palette) {
   const c = document.createElement('canvas');
   c.width = 16;
@@ -182,6 +205,7 @@ const SPRITES = {
     UP: makeSprite(GUARD_UP, POLICE_PALETTE),
     SIDE: makeSprite(GUARD_SIDE, POLICE_PALETTE),
   },
+  coin: makeSprite(COIN_MAP, COIN_PALETTE),
 };
 
 // Direction selection on the dominant axis. Idle keeps the last movement
@@ -398,16 +422,12 @@ function drawExitAndLoot(ctx, level, time) {
     ctx.fill();
   }
 
-  // Coins: small gold discs.
+  // Coins: Kenney gold coin pile sprite, drawn crisp at 24x24 (3/4 of a tile
+  // — clearly smaller than the 32px characters, but big enough to read).
   for (const coin of level.coins) {
     if (coin.taken) continue;
-    ctx.fillStyle = COLORS.gold;
-    ctx.beginPath();
-    ctx.arc(coin.x, coin.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#a87c1f';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(SPRITES.coin, Math.round(coin.x) - 12, Math.round(coin.y) - 12, 24, 24);
   }
 }
 

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMBERLIGHT — The Lighthouse Heist</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="tb-left">
+      <span class="game-title">EMBERLIGHT</span>
+      <span id="level-name">The Shore</span>
+    </div>
+    <div class="tb-mid"><span id="objective">Steal the Brass Key</span></div>
+    <div class="tb-right">
+      <span class="tb-item">⏱ <span id="timer">00:00</span></span>
+      <span class="tb-item">◆ <span id="loot">0 / 4</span></span>
+      <span class="tb-item">SCORE <span id="score">0</span></span>
+      <span class="tb-item">STRIKES <span id="strikes">···</span></span>
+      <span class="tb-item" id="ghost">GHOST +500</span>
+    </div>
+  </header>
+
+  <div id="main">
+    <div id="stage">
+      <canvas id="game" width="960" height="640"></canvas>
+
+      <div id="screen-title" class="overlay">
+        <h1>EMBERLIGHT</h1>
+        <h2>The Lighthouse Heist</h2>
+        <p>Three heists in one lighthouse. Cross the beam, dodge the keepers,
+        steal the treasure, and slip out unseen.</p>
+        <p class="keys">WASD / arrows — move &nbsp;·&nbsp; SHIFT — sneak &nbsp;·&nbsp; SPACE — sprint (loud)<br>
+        CLICK — throw a shell &nbsp;·&nbsp; Q — smoke &nbsp;·&nbsp; R — douse a lamp<br>
+        P — pause &nbsp;·&nbsp; M — mute</p>
+        <button id="btn-start">BEGIN THE HEIST</button>
+        <p class="hint">Finish a level unseen for the +500 ghost bonus. Three strikes and the night is over.</p>
+      </div>
+
+      <div id="screen-pause" class="overlay hidden">
+        <h1>PAUSED</h1>
+        <p>Press P or click to keep sneaking.</p>
+        <button id="btn-resume">RESUME</button>
+      </div>
+
+      <div id="screen-level" class="overlay hidden">
+        <h1 id="level-title">LEVEL CLEAR</h1>
+        <div id="level-detail"></div>
+        <button id="btn-next">NEXT HEIST</button>
+      </div>
+
+      <div id="screen-over" class="overlay hidden">
+        <h1>CAUGHT</h1>
+        <p>Three strikes — the keepers found you.</p>
+        <div id="over-detail"></div>
+        <button id="btn-retry">TRY AGAIN</button>
+      </div>
+
+      <div id="screen-win" class="overlay hidden">
+        <h1>THE EMBERLIGHT IS YOURS</h1>
+        <p>All three heists, complete.</p>
+        <div id="win-detail"></div>
+        <button id="btn-again">PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <aside id="panel">
+      <section>
+        <h3>DETECTION</h3>
+        <div class="row"><span id="detection" class="value hidden">HIDDEN</span></div>
+        <div class="bar"><div id="detection-bar" class="bar-fill hidden" style="width:0%"></div></div>
+      </section>
+      <section>
+        <h3>ALARM</h3>
+        <div class="row"><span id="alarm" class="value">0%</span></div>
+        <div class="bar"><div id="alarm-bar" class="bar-fill" style="width:0%"></div></div>
+      </section>
+      <section class="grid2">
+        <div><h3>VISIBILITY</h3><span id="visibility" class="value">0%</span></div>
+        <div><h3>NOISE</h3><span id="noise" class="value">QUIET</span></div>
+        <div><h3>LOOT</h3><span id="loot-panel" class="value">0</span></div>
+        <div><h3>SPOTTED</h3><span id="spotted" class="value">0</span></div>
+      </section>
+      <section>
+        <h3>GOAL</h3>
+        <p id="goal">Steal the Brass Key, then reach the Cliff Path</p>
+      </section>
+      <section>
+        <h3>LEGEND</h3>
+        <ul class="legend">
+          <li><span class="sw cone-guard"></span> Keeper's vision cone</li>
+          <li><span class="sw cone-cam"></span> Camera sweep</li>
+          <li><span class="sw beam"></span> Lighthouse beam</li>
+          <li><span class="sw fog"></span> Fog bank — hides you</li>
+          <li><span class="sw bush"></span> Bush — hides you while sneaking</li>
+          <li><span class="sw lamp"></span> Lamp pool — you are easy to spot</li>
+          <li><span class="sw gem"></span> Treasure &amp; loot</li>
+        </ul>
+      </section>
+      <section>
+        <h3>CONTROLS</h3>
+        <ul class="controls">
+          <li>WASD / arrows — move</li>
+          <li>SHIFT — sneak (slow, quiet)</li>
+          <li>SPACE — sprint (fast, loud)</li>
+          <li>CLICK — throw a shell</li>
+          <li>Q — smoke &nbsp;·&nbsp; R — douse lamp</li>
+          <li>P — pause &nbsp;·&nbsp; M — mute</li>
+        </ul>
+      </section>
+      <section>
+        <h3>FIELD NOTES</h3>
+        <div id="field-notes"></div>
+      </section>
+    </aside>
+  </div>
+
+  <footer id="foot">EMBERLIGHT — a stealth game in three heists · made for make.fun's best stealth game bounty</footer>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

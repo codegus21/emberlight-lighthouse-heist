@@ -1,0 +1,42 @@
+// EMBERLIGHT — local dev server (Node 22, standard library only).
+// Serves this repository's game/ folder at http://localhost:8080, offline.
+// Usage: node serve.ts   (then open http://localhost:8080 in desktop Chrome)
+
+import { createServer } from 'node:http';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { extname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('.', import.meta.url));
+const gameDir = join(root, 'game');
+const port = Number(process.env.PORT ?? 8080);
+
+const types = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+};
+
+const server = createServer((req, res) => {
+  const path = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
+  const file = join(gameDir, path === '/' ? 'index.html' : path);
+  if (!file.startsWith(gameDir) || !existsSync(file) || !statSync(file).isFile()) {
+    res.writeHead(404, { 'content-type': 'text/plain' });
+    res.end('not found\n');
+    return;
+  }
+  res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' });
+  res.end(readFileSync(file));
+});
+
+server.listen(port, () => {
+  console.log(`EMBERLIGHT serving game/ at http://localhost:${port}`);
+});
